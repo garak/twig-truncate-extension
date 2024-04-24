@@ -2,71 +2,67 @@
 
 namespace Bluetel\Twig\Tests;
 
-use Twig_Environment;
-use Twig_Loader_String;
-//use Bluetel\Twig\TruncateExtension;
+use Bluetel\Twig\TruncateExtension;
+use PHPUnit\Framework\TestCase;
+use Twig\Environment;
+use Twig\Loader\ArrayLoader;
+use Twig\TwigFilter;
 
-class TruncateExtensionTest extends \PHPUnit_Framework_TestCase
+class TruncateExtensionTest extends TestCase
 {
-    /**
-     * @var TruncateExtension
-     **/
-    protected $extension;
+    private TruncateExtension $extension;
 
-    /**
-     * @var Twig_Environment
-     */
-    protected $twig;
+    private Environment $twig;
 
-    protected function setUp()
+    protected function setUp(): void
     {
-        $loader = new Twig_Loader_String();
-        $this->extension = new \Bluetel\Twig\TruncateExtension();
-        $this->twig = new Twig_Environment($loader);
+        $loader = new ArrayLoader();
+        $this->extension = new TruncateExtension();
+        $this->twig = new Environment($loader);
         $this->twig->addExtension($this->extension);
     }
 
     /**
-     * @covers Bluetel\Twig\TruncateExtension::getFilters
+     * @covers \Bluetel\Twig\TruncateExtension::getFilters
      **/
-    public function testGetFilters()
+    public function testGetFilters(): void
     {
         $filters = $this->extension->getFilters();
         $this->assertArrayHasKey('truncate_letters', $filters);
-        $this->assertInstanceOf('\\Twig_SimpleFilter', $filters['truncate_letters']);
+        $this->assertInstanceOf(TwigFilter::class, $filters['truncate_letters']);
         $this->assertArrayHasKey('truncate_words', $filters);
-        $this->assertInstanceOf('\\Twig_SimpleFilter', $filters['truncate_words']);
+        $this->assertInstanceOf(TwigFilter::class, $filters['truncate_words']);
     }
 
     /**
-     * @covers Bluetel\Twig\TruncateExtension::truncateLetters
+     * @covers \Bluetel\Twig\TruncateExtension::truncateLetters
      */
-    public function testLettersTruncation()
+    public function testLettersTruncation(): void
     {
         $data = $this->twig->render('{{ "<b>hello world</b>"|truncate_letters(5) }}');
-	$this->assertContains("<b>hello</b>", $data);
+	    $this->assertStringContainsString("<b>hello</b>", $data);
     }
 
     /**
-     * @covers Bluetel\Twig\TruncateExtension::truncateWords
+     * @covers \Bluetel\Twig\TruncateExtension::truncateWords
      */
-    public function testWordsTruncation()
+    public function testWordsTruncation(): void
     {
         $data = $this->twig->render('{{ "<b>hello world</b>"|truncate_words(1) }}');
-        $this->assertContains("<b>hello</b>", $data);
+        $this->assertStringContainsString("<b>hello</b>", $data);
     }
 
     /**
      * Ensures we preserve tricky HTML entities.
-     * @covers Bluetel\Twig\TruncateExtension::htmlToDomDocument
+     * @covers \Bluetel\Twig\TruncateExtension::htmlToDomDocument
      */
-    public function testHtmlEntityConversion()
+    public function testHtmlEntityConversion(): void
     {
         $html = $this
             ->extension
             ->htmlToDomDocument("<DOCTYPE html><html><head></head><body>Foo’s bar</body></html>")
             ->saveHtml()
         ;
-        $this->assertContains("Foo&rsquo;s bar", $html);
+        $this->assertStringContainsString("Foo&rsquo;s bar", $html);
     }
 }
